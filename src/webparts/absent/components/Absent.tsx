@@ -1,22 +1,23 @@
 import * as React from "react";
 import { IAbsentProps } from "../AbsentWebPart";
+import { Absence } from "./Absence";
 import styles from "./Absent.module.scss";
 
 const Absent: React.FC<IAbsentProps> = (props) => {
-    const [absent, setAbsent] = React.useState([]);
+    const [absent, setAbsent] = React.useState<Absence[]>([]);
 
-    async function load() {
+    async function load(): Promise<void> {
         try {
-            const resp = await props.getAbsent();
-            console.log("resp", resp.value);
-            setAbsent(resp.value);
+            const { value } = await props.getAbsent();
+            setAbsent(value);
         } catch (err) {
             console.log(err);
+            throw new Error("problem loading data");
         }
     }
 
     React.useEffect(() => {
-        load();
+        load().catch(console.error);
     }, [props.division]);
 
     if (!absent.length) {
@@ -32,6 +33,7 @@ const Absent: React.FC<IAbsentProps> = (props) => {
                         <th>Covered By</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     {absent.map((a) => {
                         const coverage =
@@ -41,9 +43,8 @@ const Absent: React.FC<IAbsentProps> = (props) => {
                                     return acc;
                                 }, [])
                                 : [];
-                        console.log(coverage);
                         return (
-                            <tr>
+                            <tr key={a["@odata.id"]}>
                                 <td>{a.Faculty.Title}</td>
                                 <td>{coverage.join(", ")}</td>
                             </tr>
